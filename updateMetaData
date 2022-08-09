@@ -1,0 +1,52 @@
+StaticResource sr = [SELECT Id, Body FROM StaticResource WHERE Name = 'mytempMetaDataCSV' LIMIT 1];
+String body = sr.Body.toString();
+List<String> lstData = body.split('\n');
+boolean isFirstRow = true;
+Map<String,MetaData> listMetaDataUpdate = new Map<String,MetaData>();
+for(String strLineData : lstData){
+    if(isFirstRow == true){
+        isFirstRow = false;
+        continue;
+    }
+    Integer i = 0; 
+    MetaData metaDataObj = new MetaData();
+    for(String oneCellData : strLineData.replaceAll('\r','').split(',')){
+        if(i==0){
+            metaDataObj.Id = oneCellData;
+        }
+        if(i==5){
+            metaDataObj.Country_Name__c = oneCellData;
+        }
+        if(i==6){
+            metaDataObj.Potential_Region__c = oneCellData;
+        }
+        i++;
+    }
+    listMetaDataUpdate.put(metaDataObj.Id,metaDataObj);
+}
+
+List<MetaData> custDiscountDetail = [SELECT ID,MasterLabel,DeveloperName,Customer_Id__c,Discount__c,Total_Purchase__c
+                                                            FROM MetaData__mdt
+                                                            WHERE Id =: listMetaDataUpdate.keySet()];
+
+Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
+    for(MetaData obj : custDiscountDetail){
+        MetaData obj1 = listMetaDataUpdate.get(obj.Id);
+        Metadata.CustomMetadata metadataRec =  new Metadata.CustomMetadata();
+        metadataRec.fullName = 'MetaData__mdt.'+obj.DeveloperName;
+        metadataRec.label = custDiscountDetail.MasterLabel;
+
+        Metadata.CustomMetadataValue Country_NameValue = new Metadata.CustomMetadataValue();
+        Country_NameValue.field = 'Country_Name__c';
+        Country_NameValue.value = obj1.Country_Name__c;
+        metadataRec.values.add(Country_NameValue);
+
+        Metadata.CustomMetadataValue Potential_RegionValue = new Metadata.CustomMetadataValue();
+        Potential_RegionValue.field = 'Potential_Region__c';
+        Potential_RegionValue.value = obj1.Potential_Region__c;
+        metadataRec.values.add(Potential_RegionValue);
+
+        mdContainer.addMetadata(metadataRec);
+    }
+    
+Metadata.Operations.enqueueDeployment(mdContainer, null);
