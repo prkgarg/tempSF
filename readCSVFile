@@ -1,0 +1,29 @@
+StaticResource sr = [SELECT Id, Body FROM StaticResource WHERE Name = 'mytempMetaDataCSV' LIMIT 1];
+String body = sr.Body.toString();
+List<String> lstData = body.split('\n');
+boolean isFirstRow = true;
+List<MetaData> listMetaDataUpdate = new List<MetaData>();
+for(String strLineData : lstData){
+    if(isFirstRow == true){
+        isFirstRow = false;
+        continue;
+    }
+    Integer i = 0; 
+    MetaData metaDataObj = new MetaData();
+    for(String oneCellData : strLineData.replaceAll('\r').split(',')){
+        if(i==0){
+            metaDataObj.Id = oneCellData;
+        }
+        if(i==5){
+            metaDataObj.Country_Name__c = oneCellData;
+        }
+        if(i==6){
+            metaDataObj.Potential_Region__c = oneCellData;
+        }
+        i++;
+    }
+    listMetaDataUpdate.add(metaDataObj);
+}
+for(MetaData obj : listMetaDataUpdate)
+    System.debug('obj :: '+obj);
+Update listMetaDataUpdate;
