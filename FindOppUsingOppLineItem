@@ -1,0 +1,58 @@
+public static void handleMethod(List<OpportunityLineItem> lstOppLineItems){
+    if(lstOppLineItems.size()>0){
+        //Map<Opportunity,List<String>> mapOpportunityIds = new Map<Opportunity,List<String>>();
+        Set<String> setOpportunityIds = new Set<String>();
+        Set<Id> setProductIds = new Set<Id>();
+        for(OpportunityLineItem oppLineItemObj : lstOppLineItems){
+            if(String.isNotBlank(oppLineItemObj.OpportunityId) && String.isNotBlank(oppLineItemObj.ProductId)){
+                
+                // List<String> lstTemp = new List<String>();
+                
+                // if(mapOpportunityIds.containsKey(oppLineItemObj.OpportunityId)){
+                //     lstTemp = mapOpportunityIds.get(oppLineItemObj.OpportunityId);
+                // }
+                
+                // lstTemp.add(oppLineItemObj.ProductId)
+                // mapOpportunityIds.put(oppLineItemObj.OpportunityId,lstTemp);
+                
+                setProductIds.add(oppLineItemObj.ProductId);
+                setOpportunityIds.add(oppLineItemObj.OpportunityId);
+            }
+        }
+        if(setProductIds.size()>0){
+            // Map<Id,Product2> lstProds = new Map<String, Product2>([SELECT Id,Family FROM Product2 WHERE ID in :setProductIds]);
+            // Map<String,Set<String>> mapOppIdsProdFamilies = new Map<String,Set<String>>();
+            // for(Opportunity objOpp : mapOpportunityIds.keySet()){
+            //     for(String prodId : mapOpportunityIds.get(objOpp)){
+            //         if(lstProds.containsKey(prodId)){
+            //             Set<String> lstTemp = new Set<String>();
+            //             if(mapOppIdsProdFamilies.containsKey(objOpp.Id)){
+            //                 lstTemp = mapOppIdsProdFamilies.get(objOpp.Id);
+            //             }
+            //             lstTemp.add(lstProds.get(prodId).Family);
+            //             mapOppIdsProdFamilies.put(objOpp.Id,lstTemp);
+            //         }
+            //     }
+            // }
+            Set<String> setProdFamilies = new Set<String>();
+            for(Product2 obj : [SELECT Id,Family FROM Product2 WHERE ID in :setProductIds]){
+                setProdFamilies.add(obj.Family);
+            }
+            // List<OpportunityLineItem> lstOppLineItems = [SELECT Id,OpportunityId FROM OpportunityLineItem WHERE Product2.Family IN :setProdFamilies AND OpportunityId IN :mapOpportunityIds.keySet() AND ID NOT IN :lstOppLineItems];
+            // for(OpportunityLineItem oppLineItem : lstOppLineItems){
+            //     if(mapOpportunityIds.containsKey(oppLineItem.OpportunityId)){
+            //         mapOpportunityIds.remove(oppLineItem.OpportunityId);
+            //     }
+            // }
+            List<OpportunityLineItem> lstOppLineItems = [SELECT Id,OpportunityId FROM OpportunityLineItem WHERE Product2.Family IN :setProdFamilies AND OpportunityId IN :setOpportunityIds AND ID NOT IN :lstOppLineItems];
+            for(OpportunityLineItem oppLineItem : lstOppLineItems){
+                if(setOpportunityIds.contains(oppLineItem.OpportunityId)){
+                    setOpportunityIds.remove(oppLineItem.OpportunityId);
+                }
+            }
+            if(setOpportunityIds.size()>0){
+                //here setOpportunityIds is set contains those opportunity ids 
+            }
+        }
+    }
+}
